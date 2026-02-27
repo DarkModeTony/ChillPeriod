@@ -86,10 +86,16 @@ export default function AttendanceHeatmap({ attendanceLog = {} }) {
         tempStreak = 0;
       }
 
-      // Month labels
+      // Month labels — if too close to previous, replace it (keep later month)
       const month = current.getMonth();
       if (month !== lastMonth) {
-        monthLabelsArr.push({ label: MONTHS[month], week: weekIdx });
+        const lastEntry = monthLabelsArr[monthLabelsArr.length - 1];
+        if (lastEntry && weekIdx - lastEntry.week < 3) {
+          lastEntry.label = MONTHS[month];
+          lastEntry.week = weekIdx;
+        } else {
+          monthLabelsArr.push({ label: MONTHS[month], week: weekIdx });
+        }
         lastMonth = month;
       }
 
