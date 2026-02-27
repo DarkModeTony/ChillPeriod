@@ -40,7 +40,7 @@ export async function PUT(request, { params }) {
     const updateData = await request.json();
     
     // Only allow updating allowed fields
-    const allowedFields = ['title', 'description', 'completed', 'dueDate', 'priority', 'tags', 'subjectLink', 'collaborators'];
+    const allowedFields = ['title', 'description', 'completed', 'dueDate', 'priority', 'tags', 'subjectLink', 'collaborators', 'subtasks', 'pinned', 'reminderSent'];
     
     allowedFields.forEach(field => {
       if (updateData[field] !== undefined) {

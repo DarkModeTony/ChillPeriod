@@ -64,9 +64,15 @@ Both share the **same MongoDB database** with synchronized schemas.
 - Public/private profile controls
 
 ### 📋 Tasks & Productivity
-- Manage to-do lists specifically tied to courses
+- Manage to-do lists with **subtasks/checklists** and progress bars
+- **📌 Pin** important tasks to the top
+- **🔍 Search & Sort** by title, tags, due date, or priority
+- **🏷️ Color-coded tags** — auto-assigned consistent colors per tag
+- **📅 Calendar View** — see tasks on a monthly grid with dot indicators
+- **🎯 Daily Goal** tracker — configurable target with ring chart
+- **🤝 Shared Tasks** — add collaborators, see avatars on cards
+- **⏰ Due Date Reminders** — push notification when tasks are due within 1 hour
 - Focus mode with built-in **Pomodoro Timer**
-- Weekly productivity analytics and completion rates
 - Discord integration with `/tasks` commands
 
 ### 🔔 Smart Notifications

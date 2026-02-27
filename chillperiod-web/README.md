@@ -44,9 +44,15 @@ The web application for ChillPeriod — track attendance, discover chill spots, 
 - Account management with Delete Account option
 
 ### 📋 Tasks & Productivity
-- Manage to-do lists specifically tied to courses
-- Focus mode with built-in **Pomodoro Timer**
-- Weekly productivity analytics and completion rates
+- Create tasks with **subtasks/checklists** — nested checkboxes with progress bars
+- **📌 Pin** important tasks to the top of the list
+- **🔍 Search & Sort** — filter by title or tag, sort by due date, priority, or newest
+- **🏷️ Color-coded tags** — auto-assigned consistent colors per tag for quick scanning
+- **📅 Calendar View** — toggle to a monthly grid with dot indicators per day
+- **🎯 Daily Goal** — "Complete X tasks today" with configurable target and ring chart
+- **🤝 Shared Tasks** — search and add collaborators, see stacked avatars on task cards
+- **⏰ Due Date Reminders** — browser push notification when due within 1 hour
+- Focus mode with built-in **Pomodoro Timer** (25min work / 5min break)
 - Synced with Discord bot (`/tasks` `/addtask` `/donetask`)
 
 ### 🔔 Notifications

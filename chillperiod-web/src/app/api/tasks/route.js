@@ -31,7 +31,7 @@ export async function GET(request) {
     }
 
     const tasks = await Task.find(query)
-      .sort({ dueDate: 1, createdAt: -1 }) // Sort by due date, then newest first
+      .sort({ pinned: -1, dueDate: 1, createdAt: -1 })
       .populate('collaborators', 'name username image discordId avatar');
       
     return NextResponse.json(tasks, { status: 200 });
@@ -66,7 +66,9 @@ export async function POST(request) {
       priority: data.priority || 'Medium',
       tags: data.tags || [],
       subjectLink: data.subjectLink || '',
-      collaborators: data.collaborators || []
+      collaborators: data.collaborators || [],
+      subtasks: (data.subtasks || []).map(s => ({ title: s.title || s, completed: false })),
+      pinned: !!data.pinned
     });
 
     const savedTask = await newTask.save();

@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 
+const SubtaskSchema = new mongoose.Schema({
+  title: { type: String, required: true, trim: true, maxLength: 200 },
+  completed: { type: Boolean, default: false }
+}, { _id: true });
+
 const TaskSchema = new mongoose.Schema({
   userId: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -38,8 +43,20 @@ const TaskSchema = new mongoose.Schema({
     default: [] 
   },
   subjectLink: { 
-    type: String, // Can be used to store subject code or ID from syllabus
+    type: String,
     default: ''
+  },
+  pinned: {
+    type: Boolean,
+    default: false
+  },
+  subtasks: {
+    type: [SubtaskSchema],
+    default: []
+  },
+  reminderSent: {
+    type: Boolean,
+    default: false
   },
   collaborators: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -49,7 +66,7 @@ const TaskSchema = new mongoose.Schema({
   timestamps: true 
 });
 
-// Create compound index for querying uncompleted high priority tasks, etc.
-TaskSchema.index({ userId: 1, completed: 1, dueDate: 1 });
+// Sort pinned first, then by due date, then newest
+TaskSchema.index({ userId: 1, pinned: -1, completed: 1, dueDate: 1 });
 
 export default mongoose.models?.Task || mongoose.model('Task', TaskSchema);

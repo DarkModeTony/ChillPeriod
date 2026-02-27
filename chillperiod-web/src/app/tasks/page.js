@@ -20,7 +20,7 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed'
+  const [filter, setFilter] = useState('all');
 
   // Form State
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -30,16 +30,38 @@ export default function TasksPage() {
   const [formPriority, setFormPriority] = useState('Medium');
   const [formDueDate, setFormDueDate] = useState('');
   const [formTags, setFormTags] = useState('');
+  const [formSubtasks, setFormSubtasks] = useState([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+
+  // Search & Sort
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('default'); // 'default','dueDate','priority','created'
+
+  // View mode
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
+  const [calViewMonth, setCalViewMonth] = useState(new Date().getMonth());
+  const [calViewYear, setCalViewYear] = useState(new Date().getFullYear());
+  const [selectedCalDate, setSelectedCalDate] = useState(null);
+
+  // Daily Goal
+  const [dailyGoal, setDailyGoal] = useState(3);
+  const [editingGoal, setEditingGoal] = useState(false);
+
+  // Collaborator search
+  const [showCollabSearch, setShowCollabSearch] = useState(false);
+  const [collabQuery, setCollabQuery] = useState('');
+  const [collabResults, setCollabResults] = useState([]);
+  const [selectedCollabs, setSelectedCollabs] = useState([]);
 
   // Custom Date Picker State
   const todayDate = new Date();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(todayDate.getMonth());
   const [calendarYear, setCalendarYear] = useState(todayDate.getFullYear());
-  const [stepPicker, setStepPicker] = useState('date'); // 'date' or 'time'
+  const [stepPicker, setStepPicker] = useState('date');
 
-  // Dashboard Dataimer state
-  const [timerMode, setTimerMode] = useState('work'); // 'work' or 'break'
+  // Pomodoro timer state
+  const [timerMode, setTimerMode] = useState('work');
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [timerActive, setTimerActive] = useState(false);
 
@@ -144,7 +166,9 @@ export default function TasksPage() {
           description: formDescription,
           priority: formPriority,
           dueDate: formDueDate || null,
-          tags: tagsArray
+          tags: tagsArray,
+          subtasks: formSubtasks,
+          collaborators: selectedCollabs.map(c => c._id)
         })
       });
 
@@ -160,6 +184,9 @@ export default function TasksPage() {
       setFormPriority('Medium');
       setFormDueDate('');
       setFormTags('');
+      setFormSubtasks([]);
+      setNewSubtaskTitle('');
+      setSelectedCollabs([]);
     } catch (err) {
       console.error(err);
       alert('Error creating task');
@@ -206,6 +233,70 @@ export default function TasksPage() {
     }
   };
 
+  // Pin/Unpin task
+  const togglePin = async (taskId, currentPinned) => {
+    setTasks(prev => prev.map(t => t._id === taskId ? { ...t, pinned: !currentPinned } : t));
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned: !currentPinned })
+      });
+    } catch { setTasks(prev => prev.map(t => t._id === taskId ? { ...t, pinned: currentPinned } : t)); }
+  };
+
+  // Toggle subtask completion
+  const toggleSubtask = async (taskId, subtaskId) => {
+    const task = tasks.find(t => t._id === taskId);
+    if (!task) return;
+    const updatedSubs = task.subtasks.map(s => s._id === subtaskId ? { ...s, completed: !s.completed } : s);
+    setTasks(prev => prev.map(t => t._id === taskId ? { ...t, subtasks: updatedSubs } : t));
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subtasks: updatedSubs })
+      });
+    } catch {}
+  };
+
+  // Search collaborators
+  const searchCollabs = async (q) => {
+    setCollabQuery(q);
+    if (q.length < 2) { setCollabResults([]); return; }
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+      if (res.ok) { const data = await res.json(); setCollabResults(data.filter(u => u._id !== session?.user?.id)); }
+    } catch {}
+  };
+
+  // Due date reminders on load
+  useEffect(() => {
+    if (!tasks.length) return;
+    const now = new Date();
+    tasks.forEach(t => {
+      if (t.dueDate && !t.completed && !t.reminderSent) {
+        const due = new Date(t.dueDate);
+        const hoursLeft = (due - now) / (1000 * 60 * 60);
+        if (hoursLeft > 0 && hoursLeft <= 1 && 'Notification' in window && Notification.permission === 'granted') {
+          new Notification(`⏰ Task due soon: ${t.title}`, { body: `Due in ${Math.round(hoursLeft * 60)} minutes` });
+          fetch(`/api/tasks/${t._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reminderSent: true }) }).catch(() => {});
+        }
+      }
+    });
+  }, [tasks]);
+
+  // Load daily goal from localStorage
+  useEffect(() => {
+    try { const g = localStorage.getItem('cp_daily_goal'); if (g) setDailyGoal(parseInt(g)); } catch {}
+  }, []);
+
+  // Color-coded tags helper
+  const TAG_COLORS = ['#8b5cf6','#06b6d4','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1','#14b8a6'];
+  const getTagColor = (tag) => {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+    return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+  };
+
   if (status === 'loading' || loading) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -226,11 +317,26 @@ export default function TasksPage() {
     );
   }
 
-  const filteredTasks = tasks.filter(t => {
+  // Filter, search, and sort
+  const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+  let filteredTasks = tasks.filter(t => {
     if (filter === 'active') return !t.completed;
     if (filter === 'completed') return t.completed;
     return true;
+  }).filter(t => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return t.title.toLowerCase().includes(q) || t.tags?.some(tag => tag.toLowerCase().includes(q));
   });
+
+  if (sortBy === 'dueDate') filteredTasks.sort((a, b) => (a.dueDate || '9') > (b.dueDate || '9') ? 1 : -1);
+  else if (sortBy === 'priority') filteredTasks.sort((a, b) => (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1));
+  else if (sortBy === 'created') filteredTasks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  // Daily goal calculations
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayCompletedCount = tasks.filter(t => t.completed && t.updatedAt && t.updatedAt.startsWith(todayStr)).length;
+  const dailyGoalPercent = Math.min(100, Math.round((todayCompletedCount / dailyGoal) * 100));
 
   const completedCount = tasks.filter(t => t.completed).length;
   const totalCount = tasks.length;
@@ -296,7 +402,7 @@ export default function TasksPage() {
                 <div className="layout-grid">
                   <div>
                     {/* Actions & Filters */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
                         <div style={{ background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'inline-flex' }}>
                             {['all', 'active', 'completed'].map(f => (
                                 <button
@@ -314,12 +420,40 @@ export default function TasksPage() {
                             ))}
                         </div>
                         
-                        <button 
-                            onClick={() => setShowTaskForm(true)}
-                            style={{ background: '#8b5cf6', color: 'white', padding: '10px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            {/* View Toggle */}
+                            <div style={{ background: 'var(--bg-secondary)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'inline-flex' }}>
+                                <button onClick={() => setViewMode('list')} style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === 'list' ? 'var(--bg-primary)' : 'transparent', color: viewMode === 'list' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>☰</button>
+                                <button onClick={() => setViewMode('calendar')} style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === 'calendar' ? 'var(--bg-primary)' : 'transparent', color: viewMode === 'calendar' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>📅</button>
+                            </div>
+                            <button 
+                                onClick={() => setShowTaskForm(true)}
+                                style={{ background: '#8b5cf6', color: 'white', padding: '10px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            >
+                                <span>➕</span> Add Task
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Search & Sort Bar */}
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                        <input
+                            type="text"
+                            placeholder="🔍 Search tasks or tags..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ flex: 1, minWidth: '180px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', outline: 'none' }}
+                        />
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
                         >
-                            <span>➕</span> Add Task
-                        </button>
+                            <option value="default">Sort: Default</option>
+                            <option value="dueDate">Sort: Due Date</option>
+                            <option value="priority">Sort: Priority</option>
+                            <option value="created">Sort: Newest</option>
+                        </select>
                     </div>
 
                     {/* Form Modal/Dropdown Equivalent */}
@@ -376,6 +510,54 @@ export default function TasksPage() {
                                      />
                                  </div>
 
+                                 {/* Subtasks Builder */}
+                                 <div>
+                                    <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', paddingLeft: '4px' }}>Subtasks / Checklist</label>
+                                    {formSubtasks.map((st, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                            <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>•</span>
+                                            <span style={{ flex: 1, fontSize: '13px', color: 'var(--text-primary)' }}>{st.title}</span>
+                                            <button type="button" onClick={() => setFormSubtasks(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', padding: '2px 6px' }}>✕</button>
+                                        </div>
+                                    ))}
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <input type="text" placeholder="Add a subtask..." value={newSubtaskTitle} onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' && newSubtaskTitle.trim()) { e.preventDefault(); setFormSubtasks(prev => [...prev, { title: newSubtaskTitle.trim() }]); setNewSubtaskTitle(''); } }}
+                                            style={{ flex: 1, background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '8px 12px', fontSize: '13px', outline: 'none' }} />
+                                        <button type="button" onClick={() => { if (newSubtaskTitle.trim()) { setFormSubtasks(prev => [...prev, { title: newSubtaskTitle.trim() }]); setNewSubtaskTitle(''); } }}
+                                            style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '8px 12px', fontSize: '13px', cursor: 'pointer' }}>+ Add</button>
+                                    </div>
+                                 </div>
+
+                                 {/* Collaborator Search */}
+                                 <div>
+                                    <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block', paddingLeft: '4px' }}>Share with (collaborators)</label>
+                                    {selectedCollabs.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                                            {selectedCollabs.map(c => (
+                                                <span key={c._id} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '8px', padding: '4px 10px', fontSize: '12px', color: '#a78bfa' }}>
+                                                    {c.image && <img src={c.image} alt="" style={{ width: '16px', height: '16px', borderRadius: '50%' }} />}
+                                                    {c.username || c.name}
+                                                    <button type="button" onClick={() => setSelectedCollabs(prev => prev.filter(x => x._id !== c._id))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', padding: 0 }}>✕</button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <input type="text" placeholder="Search username..." value={collabQuery} onChange={(e) => searchCollabs(e.target.value)}
+                                        style={{ width: '100%', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '8px 12px', fontSize: '13px', outline: 'none' }} />
+                                    {collabResults.length > 0 && (
+                                        <div style={{ marginTop: '6px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', maxHeight: '120px', overflowY: 'auto' }}>
+                                            {collabResults.map(u => (
+                                                <div key={u._id} onClick={() => { if (!selectedCollabs.find(c => c._id === u._id)) { setSelectedCollabs(prev => [...prev, u]); } setCollabQuery(''); setCollabResults([]); }}
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                                                    {u.image && <img src={u.image} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />}
+                                                    <span>{u.username || u.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                 </div>
+
                                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
                                      <button 
                                          type="button" 
@@ -396,7 +578,52 @@ export default function TasksPage() {
                          </div>
                     )}
 
-                    {/* The List of Tasks */}
+                    {/* Task Content — List or Calendar */}
+                    {viewMode === 'calendar' ? (
+                      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                          <button onClick={() => { if (calViewMonth === 0) { setCalViewMonth(11); setCalViewYear(y => y - 1); } else setCalViewMonth(m => m - 1); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>←</button>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{monthNames[calViewMonth]} {calViewYear}</span>
+                          <button onClick={() => { if (calViewMonth === 11) { setCalViewMonth(0); setCalViewYear(y => y + 1); } else setCalViewMonth(m => m + 1); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>→</button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
+                          {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-secondary)', padding: '4px', fontWeight: 600 }}>{d}</div>)}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                          {getCalendarDays(calViewYear, calViewMonth).map((day, i) => {
+                            if (day === null) return <div key={i} />;
+                            const dateStr = `${calViewYear}-${String(calViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                            const dayTasks = tasks.filter(t => t.dueDate && t.dueDate.startsWith(dateStr));
+                            const isSelected = selectedCalDate === dateStr;
+                            const isToday = dateStr === todayStr;
+                            return (
+                              <div key={i} onClick={() => setSelectedCalDate(isSelected ? null : dateStr)}
+                                style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', transition: 'all 0.15s',
+                                  background: isSelected ? 'rgba(139,92,246,0.2)' : 'transparent', border: isToday ? '2px solid #8b5cf6' : '1px solid transparent',
+                                  color: isSelected ? '#a78bfa' : isToday ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: isToday || isSelected ? 600 : 400 }}>
+                                <span>{day}</span>
+                                {dayTasks.length > 0 && <div style={{ display: 'flex', gap: '2px', marginTop: '2px' }}>
+                                  {dayTasks.slice(0, 3).map((_, j) => <span key={j} style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#8b5cf6' }} />)}
+                                </div>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {selectedCalDate && (
+                          <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                            <h4 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: 0 }}>Tasks for {new Date(selectedCalDate + 'T00:00').toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</h4>
+                            {tasks.filter(t => t.dueDate && t.dueDate.startsWith(selectedCalDate)).length === 0 ? (
+                              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>No tasks due this day.</p>
+                            ) : tasks.filter(t => t.dueDate && t.dueDate.startsWith(selectedCalDate)).map(t => (
+                              <div key={t._id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '8px', background: 'var(--bg-primary)', marginBottom: '6px', fontSize: '13px' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: t.completed ? '#10b981' : t.priority === 'High' ? '#ef4444' : '#f59e0b', flexShrink: 0 }} />
+                                <span style={{ color: t.completed ? 'var(--text-secondary)' : 'var(--text-primary)', textDecoration: t.completed ? 'line-through' : 'none', flex: 1 }}>{t.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {filteredTasks.length === 0 ? (
                             <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--card-bg)', border: '1px dashed var(--border-color)', borderRadius: '16px' }}>
@@ -409,10 +636,10 @@ export default function TasksPage() {
                                 <div 
                                     key={task._id} 
                                     style={{
-                                        display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)',
-                                        background: task.completed ? 'var(--bg-tertiary)' : 'var(--card-bg)',
-                                        opacity: task.completed ? 0.7 : 1, transition: 'all 0.2s',
-                                        position: 'relative'
+                                        display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', borderRadius: '16px',
+                                        border: task.pinned ? '1px solid rgba(139,92,246,0.4)' : '1px solid var(--border-color)',
+                                        background: task.completed ? 'var(--bg-tertiary)' : task.pinned ? 'rgba(139,92,246,0.03)' : 'var(--card-bg)',
+                                        opacity: task.completed ? 0.7 : 1, transition: 'all 0.2s', position: 'relative'
                                     }}
                                 >
                                     {/* Checkbox */}
@@ -421,9 +648,7 @@ export default function TasksPage() {
                                         style={{
                                             marginTop: '2px', width: '20px', height: '20px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                                             border: task.completed ? '1px solid #10b981' : '1px solid var(--text-secondary)',
-                                            background: task.completed ? '#10b981' : 'transparent',
-                                            color: task.completed ? 'white' : 'transparent',
-                                            cursor: 'pointer'
+                                            background: task.completed ? '#10b981' : 'transparent', color: task.completed ? 'white' : 'transparent', cursor: 'pointer'
                                         }}
                                     >
                                         <svg viewBox="0 0 14 14" fill="none" style={{ width: '14px', height: '14px', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
@@ -432,60 +657,82 @@ export default function TasksPage() {
                                     </button>
                                     
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                                             <h4 style={{
                                                 fontWeight: 600, fontSize: '15px', color: task.completed ? 'var(--text-secondary)' : 'var(--text-primary)',
                                                 textDecoration: task.completed ? 'line-through' : 'none', wordBreak: 'break-word', margin: 0
                                             }}>
+                                                {task.pinned && <span title="Pinned" style={{ marginRight: '6px' }}>📌</span>}
                                                 {task.title}
                                             </h4>
                                             
-                                            {/* Priority Indicator */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                                                {!task.completed && task.priority === 'High' && (
-                                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} title="High Priority"></span>
-                                                )}
-                                                {!task.completed && task.priority === 'Medium' && (
-                                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} title="Medium Priority"></span>
-                                                )}
-                                                
-                                                <button 
-                                                    onClick={() => deleteTask(task._id)}
-                                                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '14px', padding: '4px' }}
-                                                    title="Delete task"
-                                                >
-                                                    🗑️
-                                                </button>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                                                {!task.completed && task.priority === 'High' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} title="High Priority" />}
+                                                {!task.completed && task.priority === 'Medium' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} title="Medium Priority" />}
+                                                <button onClick={() => togglePin(task._id, task.pinned)} style={{ background: 'none', border: 'none', color: task.pinned ? '#8b5cf6' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px', padding: '4px' }} title={task.pinned ? 'Unpin' : 'Pin'}>📌</button>
+                                                <button onClick={() => deleteTask(task._id)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '14px', padding: '4px' }} title="Delete task">🗑️</button>
                                             </div>
                                         </div>
                                         
-                                        {/* Sub-info: Due Date & Tags */}
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                                        {/* Sub-info: Due Date, Tags (color-coded), Collaborators */}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
                                             {task.dueDate && (
                                                 <span style={{
-                                                    fontSize: '11px', padding: '4px 8px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid var(--border-color)',
-                                                    background: new Date(task.dueDate) < new Date() && !task.completed ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-primary)',
+                                                    fontSize: '11px', padding: '3px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                                    background: new Date(task.dueDate) < new Date() && !task.completed ? 'rgba(239,68,68,0.1)' : 'var(--bg-primary)',
                                                     color: new Date(task.dueDate) < new Date() && !task.completed ? '#ef4444' : 'var(--text-secondary)',
-                                                    borderColor: new Date(task.dueDate) < new Date() && !task.completed ? 'rgba(239, 68, 68, 0.2)' : 'var(--border-color)'
+                                                    border: `1px solid ${new Date(task.dueDate) < new Date() && !task.completed ? 'rgba(239,68,68,0.2)' : 'var(--border-color)'}`
                                                 }}>
                                                     ⏱️ {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             )}
-                                            
-                                            {task.tags?.map((tag, idx) => (
-                                                <span key={idx} style={{
-                                                    fontSize: '10px', fontWeight: 500, padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase',
-                                                    background: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', border: '1px solid rgba(139, 92, 246, 0.2)'
-                                                }}>
-                                                    {tag}
-                                                </span>
-                                            ))}
+                                            {task.tags?.map((tag, idx) => {
+                                                const tagColor = getTagColor(tag);
+                                                return (
+                                                    <span key={idx} style={{
+                                                        fontSize: '10px', fontWeight: 600, padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase',
+                                                        background: `${tagColor}15`, color: tagColor, border: `1px solid ${tagColor}30`
+                                                    }}>{tag}</span>
+                                                );
+                                            })}
+                                            {task.collaborators?.length > 0 && (
+                                                <div style={{ display: 'flex', marginLeft: '4px' }}>
+                                                    {task.collaborators.map((c, i) => (
+                                                        <img key={c._id || i} src={c.image || `https://ui-avatars.com/api/?name=${c.name}&size=20&background=8b5cf6&color=fff`} alt={c.name} title={c.username || c.name}
+                                                            style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid var(--card-bg)', marginLeft: i > 0 ? '-6px' : 0 }} />
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
+
+                                        {/* Subtasks */}
+                                        {task.subtasks?.length > 0 && (
+                                            <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                                                        {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length} subtasks
+                                                    </span>
+                                                    <div style={{ flex: 1, height: '3px', background: 'var(--border-color)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                        <div style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%`, height: '100%', background: '#8b5cf6', borderRadius: '2px', transition: 'width 0.3s' }} />
+                                                    </div>
+                                                </div>
+                                                {task.subtasks.map(sub => (
+                                                    <div key={sub._id} onClick={() => toggleSubtask(task._id, sub._id)}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', cursor: 'pointer' }}>
+                                                        <span style={{ width: '14px', height: '14px', borderRadius: '4px', border: sub.completed ? '1px solid #10b981' : '1px solid var(--text-muted)', background: sub.completed ? '#10b981' : 'transparent', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: 'white', flexShrink: 0 }}>
+                                                            {sub.completed && '✓'}
+                                                        </span>
+                                                        <span style={{ fontSize: '12px', color: sub.completed ? 'var(--text-secondary)' : 'var(--text-primary)', textDecoration: sub.completed ? 'line-through' : 'none' }}>{sub.title}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
+                    )}
                   </div>
 
                   {/* Right Column: Pomodoro Tracker */}
@@ -543,6 +790,42 @@ export default function TasksPage() {
                                   </button>
                               </div>
                           </div>
+                      </div>
+
+                      {/* Daily Goal Widget */}
+                      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px', marginTop: '16px', boxShadow: 'var(--shadow-sm)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                              <h3 style={{ fontWeight: 'bold', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '15px' }}>
+                                  <span>🎯</span> Daily Goal
+                              </h3>
+                              <button onClick={() => setEditingGoal(!editingGoal)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px' }}>⚙️</button>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{ position: 'relative', width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }} viewBox="0 0 36 36">
+                                      <path style={{ color: 'var(--border-color)' }} strokeWidth="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                      <path style={{ color: dailyGoalPercent >= 100 ? '#10b981' : '#f59e0b', transition: 'all 1s ease-out' }} strokeDasharray={`${dailyGoalPercent}, 100`} strokeWidth="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                  </svg>
+                                  <span style={{ position: 'absolute', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{todayCompletedCount}/{dailyGoal}</span>
+                              </div>
+                              <div>
+                                  <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '14px', margin: '0 0 2px 0' }}>
+                                      {dailyGoalPercent >= 100 ? '🎉 Goal reached!' : `${dailyGoal - todayCompletedCount} more to go`}
+                                  </p>
+                                  <p style={{ color: 'var(--text-secondary)', fontSize: '12px', margin: 0 }}>Tasks completed today</p>
+                              </div>
+                          </div>
+
+                          {editingGoal && (
+                              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Target:</span>
+                                  <input type="number" min="1" max="20" value={dailyGoal}
+                                      onChange={(e) => { const v = parseInt(e.target.value) || 1; setDailyGoal(v); try { localStorage.setItem('cp_daily_goal', v); } catch {} }}
+                                      style={{ width: '50px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '6px 10px', fontSize: '13px', outline: 'none', textAlign: 'center' }} />
+                                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>tasks/day</span>
+                              </div>
+                          )}
                       </div>
                   </div>
                 </div>

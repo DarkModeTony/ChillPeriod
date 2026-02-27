@@ -525,7 +525,7 @@ User "1" --> "*" User : follows`} />
                     <ApiEndpoint method="POST" path="/api/notifications/mass-bunk" desc="Creates a mass bunk alert with time slot metadata. Notifies all followers with 'Bunk Together' option." />
                     <ApiEndpoint method="POST" path="/api/notifications/respond" desc="Handles 'Bunk Together' response. Maps friend's bunked time slots to your timetable, marks overlapping classes, cascades to your followers." />
                     <ApiEndpoint method="GET" path="/api/users/:id" desc="Fetches a user's public profile including attendanceLog, followers, following, courses, and stats." />
-                    <ApiEndpoint method="GET" path="/api/tasks" desc="Fetches all tasks for the authenticated user. Synced between web and Discord bot." />
+                    <ApiEndpoint method="GET" path="/api/tasks" desc="Fetches all tasks for the authenticated user. Supports subtasks, pinned tasks (sorted first), color-coded tags, collaborators, and due date reminders. Synced between web and Discord bot." />
                 </div>
 
                 <div style={{ marginTop: '48px' }}>
@@ -568,8 +568,8 @@ R-->>C: JSON Response`} />
                         desc="Override the auto-generated timetable with your own schedule. Supports lab groups (G1/G2) and custom time slots."
                     />
                     <InfoCard
-                        icon="📋" title="Tasks & Pomodoro"
-                        desc="Course-linked to-do lists with a built-in Pomodoro timer. Synced between web and Discord with weekly analytics."
+                        icon="📋" title="Tasks & Productivity"
+                        desc="Enhanced task management with subtasks/checklists, pin important tasks, search & sort, color-coded tags, calendar view with dot indicators, daily goal tracker with ring chart, shared tasks with collaborator avatars, due date reminders via push notifications, and a built-in Pomodoro timer. Synced with Discord bot."
                     />
                 </div>
             </section>

@@ -56,7 +56,7 @@ A Discord bot with **19 slash commands** for tracking attendance, finding chill 
 - **🏆 Bunk Leaderboard** — Top 10 bunkers at your college with bunk titles (Rookie → Bunk Legend 👑)
 - **👤 Rich Profiles** — Visual progress bar, course breakdown, streaks, social stats
 - **🔄 Synced with Web** — Same database as [chillperiod.in](https://chillperiod.in), data flows both ways
-- **📋 Task Management** — Add, view, and complete tasks right from Discord
+- **📋 Task Management** — Add, view, and complete tasks from Discord. Tasks sync with the web app's enhanced features: subtasks, pins, color-coded tags, calendar view, daily goals, and shared tasks
 
 ---
 

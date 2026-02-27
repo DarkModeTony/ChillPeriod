@@ -116,7 +116,7 @@ export default function Home() {
           {[
             { icon: '📊', title: 'GitHub-Style Heatmap', desc: 'A full-year contribution graph for attendance. Green for attended, red for bunked, streaks and stats at a glance.' },
             { icon: '🤝', title: 'Bunk Together', desc: 'When a friend mass bunks, click Bunk Together — it auto-marks YOUR overlapping classes, not theirs.' },
-            { icon: '✅', title: 'Tasks & Pomodoro', desc: 'Stay productive with a sleek to-do list, study timer, and weekly analytics.' },
+            { icon: '✅', title: 'Tasks & Productivity', desc: 'Subtasks, pin tasks, search & sort, color-coded tags, calendar view, daily goals, shared tasks, due date reminders, and Pomodoro timer.' },
             { icon: '🤖', title: 'Discord Bot', desc: '16 slash commands — track attendance, find spots, and mass bunk right from Discord.' },
             { icon: '📚', title: 'SyllabusX Integration', desc: 'Real-time B.Tech syllabus with progress tracking, notes, and PYQs.' },
             { icon: '🚨', title: 'Cascading Mass Bunk', desc: 'One-click alert to followers. If they join, their friends get invited too!' },
