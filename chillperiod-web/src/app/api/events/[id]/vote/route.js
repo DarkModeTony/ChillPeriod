@@ -1,11 +1,10 @@
 import dbConnect from '@/lib/mongodb';
 import Event from '@/models/Event.js';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/auth';
 
 export async function POST(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
