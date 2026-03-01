@@ -50,7 +50,7 @@ export default function MobileNav({ currentPage = 'home' }) {
             {status === 'authenticated' && (
               <>
                 <ThemeToggle />
-                <Link href="/spots" style={{ color: currentPage === 'spots' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: currentPage === 'spots' ? 500 : 400, textDecoration: 'none' }}>Spots</Link>
+                <Link href="/spots" style={{ color: currentPage === 'spots' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: currentPage === 'spots' ? 500 : 400, textDecoration: 'none' }}>Explore</Link>
                 <Link href="/attendance" style={{ color: currentPage === 'attendance' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: currentPage === 'attendance' ? 500 : 400, textDecoration: 'none' }}>Attendance</Link>
                 <Link href="/tasks" style={{ color: currentPage === 'tasks' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: currentPage === 'tasks' ? 500 : 400, textDecoration: 'none' }}>Tasks</Link>
                 <Link href="/timetable" style={{ color: currentPage === 'timetable' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: currentPage === 'timetable' ? 500 : 400, textDecoration: 'none' }}>Timetable</Link>
@@ -136,7 +136,7 @@ export default function MobileNav({ currentPage = 'home' }) {
                 borderRadius: '12px', textAlign: 'center'
               }}
             >
-              📍 Spots
+              🧭 Explore
             </Link>
             <Link 
               href="/attendance" 

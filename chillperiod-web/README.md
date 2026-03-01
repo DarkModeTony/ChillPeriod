@@ -28,12 +28,13 @@ The web application for ChillPeriod — track attendance, discover chill spots, 
 - Unit-wise Theory & Lab breakdown
 - Direct links to notes, PYQs, and books
 
-### 📍 Chill Spots
-- Crowdsourced cafes, parks, gaming zones near campus
+### 🧭 Explore & Events
+- **Dual Tab UI** toggling between `🎟️ Events & Shows` and `📍 Hangout Spots`
+- **Aggregation Engine** — Automatically fetches Hackathons and Cultural Fests from **Unstop** and **Devfolio**, plus "Now Playing" movies from **TMDB**.
+- Crowdsourced events (Concerts, Standups, College Fests, Parties) added by the community.
 - College-aware spot discovery using Overpass API
-- Upvote (🔥) / Downvote (👎) system
-- Google Maps integration
-- Admin controls for moderation
+- Upvote (🔥) / Downvote (👎) voting system synced with Discord
+- Modern, dynamic styling with glassmorphism event cards
 
 ### 👥 Social & Profiles
 - Follow friends, track their bunk activity

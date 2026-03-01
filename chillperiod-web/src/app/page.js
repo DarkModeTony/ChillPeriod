@@ -70,7 +70,7 @@ export default function Home() {
                 borderRadius: '14px', fontWeight: 600, fontSize: '16px', textDecoration: 'none',
                 whiteSpace: 'nowrap', textAlign: 'center'
               }}>
-                Find Spots
+                Explore Events
               </Link>
             </div>
             <a href="https://discord.com/oauth2/authorize?client_id=1468284051839520848&permissions=8&scope=bot+applications.commands" target="_blank" rel="noopener noreferrer" style={{ 
@@ -99,7 +99,7 @@ export default function Home() {
             <div className="stats-divider" style={{ width: '1px', background: 'var(--border-color)' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '36px', fontWeight: 'bold', color: 'var(--text-primary)' }}>15+</div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Chill Spots</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Events & Spots</div>
             </div>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function Home() {
             { icon: '📅', title: 'Custom Timetable', desc: 'Auto-populated by semester & section, or build your own. Lab groups (G1/G2) supported.' },
             { icon: '🛡️', title: 'Safety Status', desc: 'Know your "Safe", "Caution", and "Danger" attendance zones instantly.' },
             { icon: '😂', title: 'Excuse Generator', desc: 'Random Hinglish excuses in 5 tones — funny, serious, medical, professional, dramatic.' },
-            { icon: '📍', title: 'Chill Spots', desc: 'Discover cafes, parks, and gaming zones crowdsourced by students.' },
+            { icon: '🧭', title: 'Explore & Events', desc: 'Discover hackathons, movies, concerts, and chill spots aggregated from Unstop, Devfolio, TMDB, and crowdsourced by students.' },
             { icon: '🏆', title: 'Bunk Leaderboard', desc: 'Compete for the top bunker spot at your college. Rookie to Bunk Legend!' },
             { icon: '👥', title: 'Social Profiles', desc: 'Follow friends, view their heatmap, and track their bunk activity.' },
             { icon: '🔔', title: 'Smart Alerts', desc: 'Get notified before you drop below 75%. Cross-platform web + Push Notifications.' },

@@ -16,7 +16,7 @@ This is a **monorepo** with two packages:
 | Package | Description | Tech |
 |---------|-------------|------|
 | [`chillperiod-web`](./chillperiod-web) | Next.js web application | Next.js 16, MongoDB, Auth.js |
-| [`chillperiod-bot`](./chillperiod-bot) | Discord bot with 16 slash commands | Discord.js 14, MongoDB |
+| [`chillperiod-bot`](./chillperiod-bot) | Discord bot with 18+ slash commands | Discord.js 14, MongoDB |
 
 Both share the **same MongoDB database** with synchronized schemas.
 
@@ -41,20 +41,22 @@ Both share the **same MongoDB database** with synchronized schemas.
 - Progress tracking with interactive checkboxes
 - One-click access to notes, PYQs, and books
 
-### 📍 Chill Spots
-- Crowdsourced cafes, parks, and gaming zones near campus
-- Upvote/downvote system to highlight the best places
-- College-aware spot discovery with Overpass API
-- Google Maps integration
+### 🧭 Explore & Events
+- **Dual Tabbed UI** — instantly switch between **Events & Shows** and **Hangout Spots**
+- Automatically aggregates Hackathons and Cultural Fests from **Unstop** and **Devfolio**, and latest movies from **TMDB**
+- Crowdsourced events and spots added by the student community
+- College-aware spot discovery with Overpass API and Google Maps integration
+- Upvote/downvote engine natively integrated with Discord
 
-### 🤖 Discord Bot (16 Commands)
+### 🤖 Discord Bot (18+ Commands)
 - `/attendance` `/attend` `/bunk` — Track from Discord
 - `/massbunk` — Alert the whole server with join buttons
 - `/excuse` — Generate random Hinglish excuses 😂
 - `/leaderboard` — Top bunkers at your college
 - `/profile` — View rich attendance profiles
 - `/tasks` `/addtask` `/donetask` — Manage tasks from Discord
-- `/findspots` `/addspot` `/spotinfo` — Spots system
+- `/events` `/addevent` — Find upcoming hackathons and submit events
+- `/findspots` `/addspot` `/spotinfo` — Discover spots
 - And more! Use `/help` to see all commands
 
 ### 👥 Social Features

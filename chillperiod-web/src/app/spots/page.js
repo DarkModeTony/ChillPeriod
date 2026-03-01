@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import MobileNav from '@/components/MobileNav';
+import EventCard from '@/components/EventCard';
 import { useState, useEffect } from 'react';
 import { COLLEGES, findCollege } from '@/lib/data/colleges';
-
-// Demo data removed - using real API data
 
 const categoryEmojis = { 
   cafe: '☕', restaurant: '🍕', street_food: '🌭', 
@@ -13,9 +12,18 @@ const categoryEmojis = {
   gaming: '🎮', sweet_shop: '🍬', other: '📍' 
 };
 
-export default function SpotsPage() {
+export default function ExplorePage() {
+  const [activeTab, setActiveTab] = useState('events'); // 'events' or 'places'
+  
+  // Spots State
   const [spots, setSpots] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingSpots, setIsLoadingSpots] = useState(true);
+  
+  // Events State
+  const [events, setEvents] = useState([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  
+  // Shared UI State
   const [showAddModal, setShowAddModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportData, setReportData] = useState({ reason: 'inaccurate', detail: '' });
@@ -38,8 +46,21 @@ export default function SpotsPage() {
 
   useEffect(() => {
     fetchSpots();
+    fetchEvents();
     fetchUserCollege();
   }, []);
+
+  const fetchEvents = async () => {
+    setIsLoadingEvents(true);
+    try {
+      const res = await fetch('/api/events');
+      if (res.ok) setEvents(await res.json());
+    } catch (error) {
+       console.error('Failed to fetch API events', error);
+    } finally {
+       setIsLoadingEvents(false);
+    }
+  };
 
   const fetchUserCollege = async () => {
     try {
@@ -60,12 +81,12 @@ export default function SpotsPage() {
   };
 
   const fetchSpots = async () => {
+    setIsLoadingSpots(true);
     try {
       const res = await fetch('/api/spots');
       if (res.ok) {
         const data = await res.json();
         if (data.length === 0) {
-            // Auto-seed if empty
             await fetch('/api/seed');
             const seededRes = await fetch('/api/spots');
             if (seededRes.ok) setSpots(await seededRes.json());
@@ -76,7 +97,32 @@ export default function SpotsPage() {
     } catch (error) {
       console.error('Failed to fetch API spots', error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingSpots(false);
+    }
+  };
+
+  const handleEventVote = async (eventId, action, e) => {
+    e.stopPropagation();
+    // Optimistic Update for Events
+    setEvents(prev => prev.map(ev => {
+      if (ev._id === eventId) {
+         let newUpvotes = ev.upvotes || 0;
+         let newDownvotes = ev.downvotes || 0;
+         if (action === 'up') newUpvotes++;
+         else newDownvotes++;
+         return { ...ev, upvotes: newUpvotes, downvotes: newDownvotes, score: newUpvotes - newDownvotes };
+      }
+      return ev;
+    }));
+
+    try {
+      await fetch(`/api/events/${eventId}/vote`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ action })
+      });
+    } catch (error) {
+       console.error('Event Vote error', error);
     }
   };
 
@@ -285,11 +331,14 @@ export default function SpotsPage() {
         googleMapsUrl: item.googleMapsUrl
       }));
 
+      // Limit to max 500 spots to avoid Zod schema validation errors
+      const limitedSpots = rawSpots.slice(0, 500);
+
       // Persist to DB with college tag
       const importRes = await fetch('/api/spots/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spots: rawSpots, college: userCollege?.key || 'BPIT' })
+        body: JSON.stringify({ spots: limitedSpots, college: userCollege?.key || 'BPIT' })
       });
 
       if (importRes.ok) {
@@ -305,9 +354,16 @@ export default function SpotsPage() {
           return [...prev, ...newSpots];
         });
       } else {
-        const errData = await importRes.json().catch(() => ({}));
-        console.error('Import failed:', errData);
-        alert('Failed to save spots. Admin access required.');
+        const errData = await importRes.json().catch(() => ({ error: importRes.statusText }));
+        console.warn('Import failed:', errData.error || errData);
+        if (importRes.status === 403) {
+           alert('Only admins can import spots directly from the map. Try adding them manually!');
+        } else if (errData.details) {
+           const issues = errData.details.map(d => `${d.field}: ${d.message}`).join('\\n');
+           alert(`Validation failed:\\n${issues}`);
+        } else {
+           alert(`Failed to save spots: ${errData.error || 'Unknown error'}`);
+        }
       }
 
     } catch (error) {
@@ -350,6 +406,13 @@ export default function SpotsPage() {
     if (filter.vibe !== 'all' && spot.vibe !== filter.vibe) return false;
     if (filter.budget !== 'all' && spot.budget !== filter.budget) return false;
     if (searchQuery && !spot.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
+  const filteredEvents = events.filter(event => {
+    // simplified category matching for events if needed
+    if (filter.category !== 'all' && event.category?.toLowerCase() !== filter.category) return false;
+    if (searchQuery && !event.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
@@ -430,21 +493,54 @@ export default function SpotsPage() {
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px' }}>
           
           {/* Header - Centered */}
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '8px' }}>
-              📍 <span style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Chill Spots</span>
+              🧭 <span style={{ background: 'linear-gradient(135deg, var(--accent-purple), var(--accent-cyan))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Explore</span>
             </h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Discover the best hangout spots near BPIT</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Discover events, movies, and places near you</p>
           </div>
 
-          {/* Search & Filters - Centered */}
+          {/* TABS (Events vs Places) */}
+          <div style={{
+             display: 'flex', justifyContent: 'center', marginBottom: '32px'
+          }}>
+             <div style={{
+                display: 'inline-flex', background: 'var(--bg-secondary)', 
+                borderRadius: '16px', padding: '6px', border: '1px solid var(--border-color)'
+             }}>
+                <button 
+                  onClick={() => setActiveTab('events')}
+                  style={{
+                    padding: '10px 24px', borderRadius: '12px', border: 'none',
+                    fontWeight: '600', fontSize: '15px', cursor: 'pointer', transition: 'all 0.3s',
+                    background: activeTab === 'events' ? 'var(--text-primary)' : 'transparent',
+                    color: activeTab === 'events' ? 'var(--bg-primary)' : 'var(--text-secondary)'
+                  }}
+                >
+                  🎟️ Events & Shows
+                </button>
+                <button 
+                  onClick={() => setActiveTab('places')}
+                  style={{
+                    padding: '10px 24px', borderRadius: '12px', border: 'none',
+                    fontWeight: '600', fontSize: '15px', cursor: 'pointer', transition: 'all 0.3s',
+                    background: activeTab === 'places' ? 'var(--text-primary)' : 'transparent',
+                    color: activeTab === 'places' ? 'var(--bg-primary)' : 'var(--text-secondary)'
+                  }}
+                >
+                  📍 Hangout Spots
+                </button>
+             </div>
+          </div>
+
+          {/* Search & Filters */}
           <div style={{ 
             maxWidth: '800px', margin: '0 auto 32px auto',
             background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px'
           }}>
             <input
               type="text"
-              placeholder="🔍 Search spots..."
+              placeholder={activeTab === 'events' ? "🔍 Search events, movies, concerts..." : "🔍 Search places..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ 
@@ -453,7 +549,9 @@ export default function SpotsPage() {
                 color: 'var(--text-primary)', fontSize: '14px', outline: 'none'
               }}
             />
-            <div id="filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            
+            {activeTab === 'places' && (
+              <div id="filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <select
                 value={filter.category}
                 onChange={(e) => setFilter(prev => ({ ...prev, category: e.target.value }))}
@@ -496,14 +594,32 @@ export default function SpotsPage() {
                 <option value="luxury">💎 Luxury</option>
               </select>
             </div>
+            )}
+            
+            {activeTab === 'events' && (
+              <div id="filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <select
+                  value={filter.category}
+                  onChange={(e) => setFilter(prev => ({ ...prev, category: e.target.value }))}
+                  style={{ padding: '10px 16px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '14px' }}
+                >
+                  <option value="all">All Events</option>
+                  <option value="hackathon">💻 Hackathons</option>
+                  <option value="movie">🍿 Movies</option>
+                  <option value="cultural fest">🎭 Cultural Fests</option>
+                  <option value="concert">🎤 Concerts</option>
+                </select>
+              </div>
+            )}
+            
           </div>
 
           {/* Results Count - Centered */}
           <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            Found <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{filteredSpots.length}</span> spots
+            Found <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{activeTab === 'events' ? filteredEvents.length : filteredSpots.length}</span> results
           </p>
 
-          {/* Spots Grid - Centered */}
+          {/* Main Grid */}
           <div id="spots-grid" style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
@@ -511,7 +627,22 @@ export default function SpotsPage() {
             maxWidth: '1100px',
             margin: '0 auto'
           }}>
-            {filteredSpots.map(spot => (
+            {activeTab === 'events' && isLoadingEvents && (
+               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading live events...</div>
+            )}
+            {activeTab === 'events' && !isLoadingEvents && filteredEvents.map(event => (
+              <EventCard 
+                 key={event._id} 
+                 event={event} 
+                 onVote={handleEventVote} 
+                 onReport={() => console.log('Report Event')} 
+              />
+            ))}
+
+            {activeTab === 'places' && isLoadingSpots && (
+               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading spots...</div>
+            )}
+            {activeTab === 'places' && !isLoadingSpots && filteredSpots.map(spot => (
               <div 
                 key={spot._id} 
                 onClick={() => handleSelectSpot(spot)}
@@ -590,30 +721,50 @@ export default function SpotsPage() {
             ))}
           </div>
 
-          {/* CTA - Centered */}
-          <div style={{ 
-            maxWidth: '600px', margin: '48px auto 0 auto', textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(88,28,135,0.3), rgba(6,78,59,0.3))',
-            border: '1px solid rgba(139,92,246,0.2)', borderRadius: '20px', padding: '32px'
-          }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'white', marginBottom: '8px' }}>Know a great chill spot?</h3>
-            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '20px' }}>
-              Share it with the community! Add it directly here.
-            </p>
-            <button onClick={() => setShowAddModal(true)} style={{ 
-              padding: '12px 24px', background: '#8b5cf6', color: 'white', border: 'none',
-              borderRadius: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '14px',
-              marginRight: '12px'
-            }}>
-              ➕ Add New Spot
-            </button>
-            <button onClick={fetchSpotsFromMap} disabled={isMapLoading} style={{ 
-              padding: '12px 24px', background: 'transparent', color: '#8b5cf6', border: '1px solid #8b5cf6',
-              borderRadius: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '14px'
-            }}>
-              {isMapLoading ? '🗺️ Searching...' : '🌍 Fetch from Maps'}
-            </button>
-          </div>
+            {activeTab === 'places' && (
+              <div style={{ 
+                maxWidth: '600px', margin: '48px auto 0 auto', textAlign: 'center',
+                background: 'linear-gradient(135deg, rgba(88,28,135,0.3), rgba(6,78,59,0.3))',
+                border: '1px solid rgba(139,92,246,0.2)', borderRadius: '20px', padding: '32px'
+              }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'white', marginBottom: '8px' }}>Know a great chill spot?</h3>
+                <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '20px' }}>
+                  Share it with the community! Add it directly here.
+                </p>
+                <button onClick={() => setShowAddModal(true)} style={{ 
+                  padding: '12px 24px', background: '#8b5cf6', color: 'white', border: 'none',
+                  borderRadius: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '14px',
+                  marginRight: '12px'
+                }}>
+                  ➕ Add New Spot
+                </button>
+                <button onClick={fetchSpotsFromMap} disabled={isMapLoading} style={{ 
+                  padding: '12px 24px', background: 'transparent', color: '#8b5cf6', border: '1px solid #8b5cf6',
+                  borderRadius: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '14px'
+                }}>
+                  {isMapLoading ? '🗺️ Searching...' : '🌍 Fetch from Maps'}
+                </button>
+              </div>
+            )}
+            
+            {activeTab === 'events' && (
+              <div style={{ 
+                maxWidth: '600px', margin: '48px auto 0 auto', textAlign: 'center',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border-color)', borderRadius: '20px', padding: '32px'
+              }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>Organizing an Event?</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '20px', fontSize: '14px' }}>
+                  List your college fest, private party, or standup gig here!
+                </p>
+                <button onClick={() => { /* Wait for 'Add Event Modal' */ alert('Coming soon!') }} style={{ 
+                  padding: '12px 24px', background: 'var(--text-primary)', color: 'var(--bg-primary)', border: 'none',
+                  borderRadius: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '14px'
+                }}>
+                  ➕ List an Event
+                </button>
+              </div>
+            )}
 
           {/* Add Spot Modal */}
           {showAddModal && (

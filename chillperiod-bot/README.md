@@ -1,6 +1,6 @@
 # ChillPeriod Discord Bot 🤖
 
-A Discord bot with **19 slash commands** for tracking attendance, finding chill spots, generating excuses, managing tasks, and coordinating mass bunks — synced with the [ChillPeriod web app](https://chillperiod.in).
+A Discord bot with **21 slash commands** for tracking attendance, finding chill spots & events, generating excuses, managing tasks, and coordinating mass bunks — synced with the [ChillPeriod web app](https://chillperiod.in).
 
 [![Add to Discord](https://img.shields.io/badge/Add_to_Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1468284051839520848&permissions=8&scope=bot+applications.commands)
 
@@ -33,11 +33,13 @@ A Discord bot with **19 slash commands** for tracking attendance, finding chill 
 | `/addtask` | Add a new task |
 | `/donetask` | Mark a task as complete |
 
-### 📍 Chill Spots
+### 🧭 Explore & Events
 | Command | Description |
 |---------|-------------|
+| `/events` | Find top upcoming events & hackathons |
+| `/addevent` | Submit a new event to the community |
+| `/findspots` | Find hangout spots near campus |
 | `/addspot` | Add a new chill spot |
-| `/findspots` | Find spots near campus |
 | `/spotinfo` | Get details about a spot |
 
 ### 🔧 Utility

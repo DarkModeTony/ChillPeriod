@@ -29,7 +29,7 @@ export const spotCreateSchema = z.object({
 });
 
 export const spotImportSchema = z.object({
-  spots: z.array(spotCreateSchema).min(1).max(100),
+  spots: z.array(spotCreateSchema).min(1).max(500),
   college: z.string().max(100).optional(),
 });
 
