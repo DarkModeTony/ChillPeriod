@@ -18,6 +18,12 @@ const UserSchema = new mongoose.Schema({
   // Social
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  socialLinks: {
+    instagram: { type: String, default: '' },
+    linkedin: { type: String, default: '' },
+    leetcode: { type: String, default: '' },
+    codeforces: { type: String, default: '' }
+  },
   
   // Progression
   xp: { type: Number, default: 0 },

@@ -126,6 +126,12 @@ export const userUpdateSchema = z.object({
   notificationsEnabled: z.boolean().optional(),
   targetPercentage: z.number().int().min(0).max(100).optional(),
   customTimetable: customTimetableSchema.optional().nullable(),
+  socialLinks: z.object({
+    instagram: z.string().max(100).optional(),
+    linkedin: z.string().max(100).optional(),
+    leetcode: z.string().max(100).optional(),
+    codeforces: z.string().max(100).optional(),
+  }).optional(),
 }).strict();
 
 export const userProfileSchema = z.object({

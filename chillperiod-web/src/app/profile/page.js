@@ -27,6 +27,10 @@ export default function ProfilePage() {
   const [editSemester, setEditSemester] = useState(4);
   const [editSection, setEditSection] = useState('CSE-A');
   const [editGroup, setEditGroup] = useState('G1');
+  const [editInstagram, setEditInstagram] = useState('');
+  const [editLinkedin, setEditLinkedin] = useState('');
+  const [editLeetcode, setEditLeetcode] = useState('');
+  const [editCodeforces, setEditCodeforces] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [error, setError] = useState(null);
 
@@ -87,6 +91,10 @@ export default function ProfilePage() {
         setEditSemester(data.semester || 4);
         setEditSection(data.section || 'CSE-A');
         setEditGroup(data.group || 'G1');
+        setEditInstagram(data.socialLinks?.instagram || '');
+        setEditLinkedin(data.socialLinks?.linkedin || '');
+        setEditLeetcode(data.socialLinks?.leetcode || '');
+        setEditCodeforces(data.socialLinks?.codeforces || '');
       } else {
         const errorData = await res.json().catch(() => ({}));
         console.error('ProfilePage: API error:', res.status, errorData);
@@ -149,7 +157,13 @@ export default function ProfilePage() {
           college: editCollege,
           semester: editSemester,
           section: editSection,
-          group: editGroup
+          group: editGroup,
+          socialLinks: {
+            instagram: editInstagram,
+            linkedin: editLinkedin,
+            leetcode: editLeetcode,
+            codeforces: editCodeforces
+          }
         })
       });
 
@@ -319,7 +333,7 @@ export default function ProfilePage() {
         }} onClick={() => setIsEditing(false)}>
           <div style={{ 
             background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '24px', 
-            padding: '32px', maxWidth: '400px', width: '100%'
+            padding: '32px', maxWidth: '400px', width: '100%', maxHeight: '90vh', overflowY: 'auto'
           }} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '24px', textAlign: 'center' }}>
               ✏️ Edit Profile
@@ -435,6 +449,16 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '6px' }}>Social Links</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <input type="text" value={editInstagram} onChange={e => setEditInstagram(e.target.value)} placeholder="Instagram URL" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px' }} />
+                  <input type="text" value={editLinkedin} onChange={e => setEditLinkedin(e.target.value)} placeholder="LinkedIn URL" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px' }} />
+                  <input type="text" value={editLeetcode} onChange={e => setEditLeetcode(e.target.value)} placeholder="LeetCode URL" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px' }} />
+                  <input type="text" value={editCodeforces} onChange={e => setEditCodeforces(e.target.value)} placeholder="Codeforces URL" style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px' }} />
+                </div>
+              </div>
+
             <div style={{ display: 'flex', gap: '12px' }}>
               <button 
                 onClick={() => setIsEditing(false)} 
@@ -508,6 +532,31 @@ export default function ProfilePage() {
               📍 {user.college || 'No college set'} • {user.semester ? `${user.semester}th Sem` : ''} {user.section ? `(${user.section})` : ''} {user.group ? `• ${user.group}` : ''}
             </p>
 
+            {user.socialLinks && (user.socialLinks.instagram || user.socialLinks.linkedin || user.socialLinks.leetcode || user.socialLinks.codeforces) && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
+                {user.socialLinks.instagram && <a href={user.socialLinks.instagram} target="_blank" rel="noopener noreferrer" style={{ color: '#e1306c', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)', width: '40px', height: '40px', borderRadius: '50%', transition: 'opacity 0.2s', opacity: 0.9 }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.9}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                  </svg>
+                </a>}
+                {user.socialLinks.linkedin && <a href={user.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" style={{ color: '#0A66C2', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)', width: '40px', height: '40px', borderRadius: '50%', transition: 'opacity 0.2s', opacity: 0.9 }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.9}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </a>}
+                {user.socialLinks.leetcode && <a href={user.socialLinks.leetcode} target="_blank" rel="noopener noreferrer" style={{ color: '#FFA116', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)', width: '40px', height: '40px', borderRadius: '50%', transition: 'opacity 0.2s', opacity: 0.9 }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.9}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.483 0a1.374 1.374 0 0 0-.961.438L7.116 6.226l-3.854 4.126a5.266 5.266 0 0 0-1.209 2.104 5.35 5.35 0 0 0-.125.513 5.527 5.527 0 0 0 .062 2.362 5.83 5.83 0 0 0 .349 1.017 5.939 5.939 0 0 0 1.271 1.543l3.995 3.926a5.23 5.23 0 0 0 3.79 1.657 5.231 5.231 0 0 0 3.787-1.658l2.112-2.075a1.37 1.37 0 0 0 0-1.925 1.365 1.365 0 0 0-1.922 0l-2.112 2.075c-.468.459-1.133.736-1.802.736s-1.333-.277-1.802-.736l-3.995-3.926a3.179 3.179 0 0 1-.605-.733 3.328 3.328 0 0 1-.413-1.079 3.15 3.15 0 0 1-.12-1.059 3.24 3.24 0 0 1 .595-1.54l3.818-4.08 5.35-5.733a1.365 1.365 0 0 0 0-1.922 1.363 1.363 0 0 0-.96-.441zM7.336 17.863a1.368 1.368 0 0 0-.96 2.328l2.094 2.057c.84.825 2.049 1.319 3.342 1.319s2.502-.494 3.342-1.319l2.094-2.057a1.364 1.364 0 0 0 0-1.925 1.356 1.356 0 0 0-1.916 0l-2.094 2.057c-.468.459-1.133.736-1.802.736s-1.333-.277-1.802-.736l-2.094-2.057a1.363 1.363 0 0 0-.964-.403zM22.062 10.648a1.366 1.366 0 0 0-.96.441l-2.128 2.092a1.365 1.365 0 0 0 0 1.925 1.363 1.363 0 0 0 1.925 0l2.128-2.092a1.365 1.365 0 0 0 0-1.925 1.361 1.361 0 0 0-.965-.441zm-10.02 1.636a1.368 1.368 0 0 0-.96 2.327l5.244 5.152a1.365 1.365 0 0 0 1.92 0 1.363 1.363 0 0 0 0-1.922l-5.244-5.152a1.363 1.363 0 0 0-.96-.405z"/>
+                  </svg>
+                </a>}
+                {user.socialLinks.codeforces && <a href={user.socialLinks.codeforces} target="_blank" rel="noopener noreferrer" style={{ color: '#1F8ACB', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)', width: '40px', height: '40px', borderRadius: '50%', transition: 'opacity 0.2s', opacity: 0.9 }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.9}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4.5 7.5C5.328 7.5 6 8.172 6 9v10.5c0 .828-.672 1.5-1.5 1.5h-3C.672 21 0 20.328 0 19.5V9c0-.828.672-1.5 1.5-1.5h3zm9-4.5c.828 0 1.5.672 1.5 1.5v15c0 .828-.672 1.5-1.5 1.5h-3c-.828 0-1.5-.672-1.5-1.5v-15c0-.828.672-1.5 1.5-1.5h3zm9 7.5c.828 0 1.5.672 1.5 1.5v7.5c0 .828-.672 1.5-1.5 1.5h-3c-.828 0-1.5-.672-1.5-1.5V12c0-.828.672-1.5 1.5-1.5h3z"/>
+                  </svg>
+                </a>}
+              </div>
+            )}
+
             {/* XP Progress Bar */}
             <div style={{ maxWidth: '300px', margin: '0 auto 24px auto' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 500 }}>
@@ -573,6 +622,11 @@ export default function ProfilePage() {
                 setEditCollege(user.college || ''); 
                 setEditSemester(user.semester || 4);
                 setEditSection(user.section || 'CSE-A');
+                setEditGroup(user.group || 'G1');
+                setEditInstagram(user.socialLinks?.instagram || '');
+                setEditLinkedin(user.socialLinks?.linkedin || '');
+                setEditLeetcode(user.socialLinks?.leetcode || '');
+                setEditCodeforces(user.socialLinks?.codeforces || '');
                 setIsEditing(true); 
               }}
               style={{ 
