@@ -169,6 +169,9 @@ export default function Home() {
           Follow me on instagram <a href="https://www.instagram.com/twokney/" target="_blank" rel="noopener noreferrer" style={{ color: '#a78bfa' }}>@twokney</a>.
         </p>
           <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+            <Link href="/about-us" style={{ color: 'var(--text-secondary)', textDecoration: 'underline', fontSize: '14px' }}>
+              About Us
+            </Link>
             <Link href="/terms" style={{ color: 'var(--text-secondary)', textDecoration: 'underline', fontSize: '14px' }}>
               Terms & Conditions
             </Link>
