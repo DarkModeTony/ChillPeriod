@@ -36,8 +36,8 @@ Both share the **same MongoDB database** with synchronized schemas.
 - Support for lab groups (G1/G2)
 - Custom timetable override for personalized schedules
 
-### 📚 SyllabusX Integration
-- Real-time B.Tech syllabus from [SyllabusX](https://syllabusx.live)
+### 📚 B.Tech Syllabus Integration
+- Offline-capable B.Tech syllabus viewer
 - Progress tracking with interactive checkboxes
 - One-click access to notes, PYQs, and books
 

@@ -118,7 +118,7 @@ export default function Home() {
             { icon: '🤝', title: 'Bunk Together', desc: 'When a friend mass bunks, click Bunk Together — it auto-marks YOUR overlapping classes, not theirs.' },
             { icon: '✅', title: 'Tasks & Productivity', desc: 'Subtasks, pin tasks, search & sort, color-coded tags, calendar view, daily goals, shared tasks, due date reminders, and Pomodoro timer.' },
             { icon: '🤖', title: 'Discord Bot', desc: '16 slash commands — track attendance, find spots, and mass bunk right from Discord.' },
-            { icon: '📚', title: 'SyllabusX Integration', desc: 'Real-time B.Tech syllabus with progress tracking, notes, and PYQs.' },
+            { icon: '📚', title: 'B.Tech Syllabus Integration', desc: 'Offline B.Tech syllabus with progress tracking, notes, and PYQs.' },
             { icon: '🚨', title: 'Cascading Mass Bunk', desc: 'One-click alert to followers. If they join, their friends get invited too!' },
             { icon: '📅', title: 'Custom Timetable', desc: 'Auto-populated by semester & section, or build your own. Lab groups (G1/G2) supported.' },
             { icon: '🛡️', title: 'Safety Status', desc: 'Know your "Safe", "Caution", and "Danger" attendance zones instantly.' },

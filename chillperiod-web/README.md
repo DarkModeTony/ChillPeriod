@@ -22,8 +22,8 @@ The web application for ChillPeriod — track attendance, discover chill spots, 
 - Custom timetable override for personalized schedules
 - Today's schedule at a glance
 
-### 📚 SyllabusX Integration
-- Real-time B.Tech syllabus from [SyllabusX](https://syllabusx.live)
+### 📚 B.Tech Syllabus Integration
+- Offline-capable B.Tech syllabus viewer
 - Interactive progress checkboxes (persisted via localStorage)
 - Unit-wise Theory & Lab breakdown
 - Direct links to notes, PYQs, and books
@@ -94,7 +94,7 @@ src/
 │   ├── attendance/     # Attendance dashboard + heatmap
 │   ├── spots/          # Spots discovery page
 │   ├── profile/        # User profile + friend profiles with heatmap
-│   ├── syllabus/       # SyllabusX integration
+│   ├── syllabus/       # Syllabus integration
 │   ├── tasks/          # Task management + Pomodoro
 │   ├── docs/           # Documentation page
 │   ├── privacy/        # Privacy policy

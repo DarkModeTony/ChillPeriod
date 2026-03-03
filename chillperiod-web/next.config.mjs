@@ -18,7 +18,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://nominatim.openstreetmap.org https://*.mongodb.net https://api.syllabusx.live https://syllabusx.live ws: wss:",
+              "connect-src 'self' https://nominatim.openstreetmap.org https://*.mongodb.net ws: wss:",
               "frame-ancestors 'none'",
             ].join('; '),
           },

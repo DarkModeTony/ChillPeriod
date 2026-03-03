@@ -1,7 +1,7 @@
 /**
  * Video Lectures data curated from dotnotes.in
  * Maps semester → subject slug → video lecture entries
- * Slugs match exactly what the SyllabusX API returns
+ * Slugs match exactly what is in the syllabus data
  * Each entry has: title, url (YouTube), author
  */
 
@@ -319,7 +319,7 @@ const videoLecturesData = {
     ],
   },
 
-  // ── Semester 8 — no data from SyllabusX API (404) ──
+  // ── Semester 8 — no data ──
 };
 
 /**

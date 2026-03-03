@@ -1,5 +1,5 @@
-// SyllabusX API integration — https://api.syllabusx.live
-const SYLLABUSX_API = '/api/proxy/syllabus';
+// Using static JSON data
+import syllabusData from './syllabus-data.json';
 
 export const semesters = [
   { value: "firstsemesters",   label: "1st Semester", short: "1st" },
@@ -35,25 +35,14 @@ export const syllabusPdfs = {
 };
 
 /**
- * Fetch subject list from SyllabusX API.
+ * Fetch subject list from static syllabus data.
  * Returns array of slug strings like ["database-management-system", "theory-of-computation"]
  */
 export async function fetchSubjects(semesterValue, branch) {
   try {
-    const url = `${SYLLABUSX_API}/btech/${semesterValue}/${branch}`;
-    console.log('[Syllabus] Fetching:', url);
-    const res = await fetch(url, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) {
-        console.error('[Syllabus] Error:', res.status, res.statusText);
-        return [];
-    }
-    const data = await res.json();
-    console.log('[Syllabus] Data received:', data);
-    return data;
+    return syllabusData[semesterValue]?.[branch]?.subjects || [];
   } catch (error) {
-    console.error('[Syllabus] Fetch Failed:', error);
+    console.error('[Syllabus] Static data error:', error);
     return [];
   }
 }
@@ -62,26 +51,15 @@ export async function fetchSubjects(semesterValue, branch) {
  * Fetch full details for a single subject.
  * Returns rich object with theory units, lab experiments, paper codes, credits, etc.
  */
-export async function fetchSubjectDetails(semesterValue, branch, subjectName) {
+export async function fetchSubjectDetails(semesterValue, branch, slug) {
   try {
-    const res = await fetch(
-      `${SYLLABUSX_API}/btech/${semesterValue}/${branch}/${subjectName}`,
-      { next: { revalidate: 86400 } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return Array.isArray(data) ? data[0] : data;
-  } catch {
+    return syllabusData[semesterValue]?.[branch]?.details?.[slug] || null;
+  } catch (error) {
+    console.error('[Syllabus Detail] Static data error:', error);
     return null;
   }
 }
 
-/**
- * Build a SyllabusX web link for a subject (notes/PYQ/books).
- */
-export function getSyllabusXLink(semesterShort, branch, subjectSlug) {
-  return `https://syllabusx.live/courses/btech/${semesterShort}/${branch.toLowerCase()}/${subjectSlug}`;
-}
 
 // Legacy helpers (still used by existing code)
 export const getPdfLink = (branch) => syllabusPdfs[branch] || null;

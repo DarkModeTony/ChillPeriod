@@ -108,7 +108,7 @@ export default function PrivacyPolicyPage() {
                 <><strong>Google & Discord (OAuth):</strong> Provide authentication only. We receive your basic profile; they do not receive your app data.</>,
                 <><strong>MongoDB Atlas:</strong> Cloud database provider that stores your data with enterprise-grade encryption.</>,
                 <><strong>Vercel:</strong> Hosting platform — handles request routing but does not access or store your personal data.</>,
-                <><strong>SyllabusX API:</strong> External API for syllabus content. No personal data is sent; only subject queries.</>,
+                <><strong>Syllabus Integration:</strong> Local static data for syllabus content. No personal data is sent.</>,
                 <><strong>YouTube (Thumbnails):</strong> Video thumbnails load from YouTube CDN. No personal data is transmitted.</>,
               ]} />
             </Section>

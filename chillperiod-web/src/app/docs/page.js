@@ -192,7 +192,7 @@ export default function DocsPage() {
                         </p>
                          <ul style={{ paddingLeft: '24px', color: 'var(--text-secondary)', lineHeight: 1.7, listStyleType: 'disc' }}>
                             <li><strong>Chill Spots 📍:</strong> A crowdsourced feed of the best local cafes, parks, and gaming lounges near your campus. When bunking, you can select a Spot, opening Google Maps routing automatically. You can also "Upvote" spots to influence their ranking.</li>
-                            <li><strong>Smart Syllabus 📚:</strong> Powered by SyllabusX APIs, you can check off topics you've covered in class. It features one-click links to specific study notes, previous year question papers (PYQs), and required lab experiments.</li>
+                            <li><strong>Smart Syllabus 📚:</strong> You can check off topics you've covered in class. It features one-click links to specific study notes, previous year question papers (PYQs), and required lab experiments.</li>
                             <li><strong>Class Timetable 📅:</strong> A dedicated, easy-to-read view of your week's schedule, segmented by Theory and Lab blocks. Auto-populated by Semester & Section, with support for lab groups (G1/G2) and custom timetable overrides.</li>
                         </ul>
                     </div>

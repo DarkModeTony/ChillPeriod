@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import MobileNav from '@/components/MobileNav';
-import { semesters, branches, getPdfLink, fetchSubjects, fetchSubjectDetails, getSyllabusXLink } from '@/lib/data/btech-syllabus';
+import { semesters, branches, getPdfLink, fetchSubjects, fetchSubjectDetails } from '@/lib/data/btech-syllabus';
 import { getVideoLectures, getDotnotesVideoLink, extractYouTubeId } from '@/lib/data/video-lectures';
 
 function slugToTitle(slug) {
@@ -49,17 +49,17 @@ function SubjectCard({ slug, semesterValue, branch, semesterShort }) {
   const loadDetails = useCallback(async () => {
     if (details) return;
     setLoading(true);
-    const data = await fetchSubjectDetails(semesterValue, branch, subjectName);
+    const data = await fetchSubjectDetails(semesterValue, branch, slug);
     setDetails(data);
     setLoading(false);
-  }, [details, semesterValue, branch, subjectName]);
+  }, [details, semesterValue, branch, slug]);
 
   const handleClick = () => {
     if (!expanded) loadDetails();
     setExpanded(!expanded);
   };
 
-  const syllabusXUrl = getSyllabusXLink(semesterShort, branch, slug);
+
   const videoLectures = getVideoLectures(semesterValue, slug);
   const dotnotesLink = getDotnotesVideoLink(slug);
   const hasTheory = details?.theory?.length > 0;
@@ -619,18 +619,7 @@ export default function SyllabusPage() {
           border-bottom-color: #8b5cf6 !important;
           font-weight: 600;
         }
-        .syllabusx-link {
-          font-size: 13px;
-          color: #8b5cf6;
-          text-decoration: none;
-          font-weight: 500;
-          padding: 6px 12px;
-          border-radius: 8px;
-          transition: background 0.2s ease;
-        }
-        .syllabusx-link:hover {
-          background: rgba(139, 92, 246, 0.08);
-        }
+
 
 
         .spinner {
