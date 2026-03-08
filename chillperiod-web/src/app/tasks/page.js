@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import MobileNav from '@/components/MobileNav';
+import Notepad from '@/components/Notepad';
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 function getCalendarDays(year, month) {
@@ -38,7 +39,7 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = useState('default'); // 'default','dueDate','priority','created'
 
   // View mode
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
+  const [viewMode, setViewMode] = useState('list'); // 'list', 'calendar', or 'notepad'
   const [calViewMonth, setCalViewMonth] = useState(new Date().getMonth());
   const [calViewYear, setCalViewYear] = useState(new Date().getFullYear());
   const [selectedCalDate, setSelectedCalDate] = useState(null);
@@ -422,10 +423,11 @@ export default function TasksPage() {
                         
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                             {/* View Toggle */}
-                            <div style={{ background: 'var(--bg-secondary)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'inline-flex' }}>
-                                <button onClick={() => setViewMode('list')} style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === 'list' ? 'var(--bg-primary)' : 'transparent', color: viewMode === 'list' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>☰</button>
-                                <button onClick={() => setViewMode('calendar')} style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === 'calendar' ? 'var(--bg-primary)' : 'transparent', color: viewMode === 'calendar' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>📅</button>
-                            </div>
+                             <div style={{ background: 'var(--bg-secondary)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'inline-flex' }}>
+                                 <button onClick={() => setViewMode('list')} style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === 'list' ? 'var(--bg-primary)' : 'transparent', color: viewMode === 'list' ? 'var(--text-primary)' : 'var(--text-secondary)' }} title="List view">☰</button>
+                                 <button onClick={() => setViewMode('calendar')} style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === 'calendar' ? 'var(--bg-primary)' : 'transparent', color: viewMode === 'calendar' ? 'var(--text-primary)' : 'var(--text-secondary)' }} title="Calendar view">📅</button>
+                                 <button onClick={() => setViewMode('notepad')} style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === 'notepad' ? 'var(--bg-primary)' : 'transparent', color: viewMode === 'notepad' ? 'var(--text-primary)' : 'var(--text-secondary)' }} title="Notepad">📝</button>
+                             </div>
                             <button 
                                 onClick={() => setShowTaskForm(true)}
                                 style={{ background: '#8b5cf6', color: 'white', padding: '10px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
@@ -578,8 +580,12 @@ export default function TasksPage() {
                          </div>
                     )}
 
-                    {/* Task Content — List or Calendar */}
-                    {viewMode === 'calendar' ? (
+                    {/* Task Content — List, Calendar, or Notepad */}
+                    {viewMode === 'notepad' ? (
+                      <div style={{ marginTop: '8px' }}>
+                        <Notepad />
+                      </div>
+                    ) : viewMode === 'calendar' ? (
                       <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                           <button onClick={() => { if (calViewMonth === 0) { setCalViewMonth(11); setCalViewYear(y => y - 1); } else setCalViewMonth(m => m - 1); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '18px' }}>←</button>
